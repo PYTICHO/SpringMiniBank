@@ -24,7 +24,7 @@ public class UserEntity {
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @NotBlank  // may be null but not blank
+    @NotBlank
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
@@ -48,10 +48,4 @@ public class UserEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<RefreshTokenEntity> refreshTokens;
-
-
-
-
-
-
 }

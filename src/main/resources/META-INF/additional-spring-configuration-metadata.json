@@ -1,0 +1,17 @@
+{"properties": [
+  {
+    "name": "app.security.jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'app.security.jwt.secret'"
+  },
+  {
+    "name": "app.security.jwt.access-token-ttl-minutes",
+    "type": "java.lang.String",
+    "description": "A description for 'app.security.jwt.access-token-ttl-minutes'"
+  },
+  {
+    "name": "app.security.jwt.refresh-token-ttl-days",
+    "type": "java.lang.String",
+    "description": "A description for 'app.security.jwt.refresh-token-ttl-days'"
+  }
+]}
