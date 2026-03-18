@@ -77,8 +77,7 @@ public class BankService {
 
 
     @Transactional
-    public TransactionResponseDto make_transaction(String email, TransactionRequestDto request) {
-        LocalDateTime created_at = LocalDateTime.now();
+    public TransactionResponseDto makeTransaction(String email, TransactionRequestDto request) {
         UserEntity user = userRepository.findByEmail(email).orElseThrow(
             () -> new NotFoundAccountException("User с email: '%s' не существует!".formatted(email))
         );
@@ -92,13 +91,13 @@ public class BankService {
 
         // Проверяем тип перевода и делаем сам перевод
         switch (request.type()) {
+
             case CARD_TO_CARD:
                 if (request.to() == null) {
-                    throw new UniversalException("toCardNumber не должен быть null!", HttpStatus.BAD_REQUEST);
+                    throw new UniversalException("to не должен быть null при CARD_TO_CARD!", HttpStatus.BAD_REQUEST);
                 }
 
                 String toCardNumber = formatCardNumber(request.to());
-
                 CardEntity toCardEntity = cardRepository.findByCardNumber(toCardNumber).orElseThrow(
                     () -> new InvalidCardNumberException("Карта с номером: '%s' не найдена".formatted(toCardNumber))
                 );
@@ -109,7 +108,12 @@ public class BankService {
                 transferMoney(request.amount(), fromAccountEntity, toAccountEntity);
                 break;
 
+
             case PHONE_TRANSFER:
+                if (request.to() == null) {
+                    throw new UniversalException("to не должен быть null при PHONE_TRANSFER!", HttpStatus.BAD_REQUEST);
+                }
+
                 // Проверяем формат номера телефона
                 String normalizedPhoneNumber = GlobalFunctions.normalizePhone(request.to());
 
@@ -120,38 +124,30 @@ public class BankService {
                 // Переводим
                 transferMoney(request.amount(), fromAccountEntity, toAccountEntity);
                 break;
+
+
+            case DEPOSIT:
+                if (request.to() != null) {
+                    throw new UniversalException("to должен быть null при DEPOSIT!", HttpStatus.BAD_REQUEST);
+                }
+
+                toAccountEntity = fromAccountEntity;
+                fromAccountEntity = null;
+                transferDeposit(request.amount(), toAccountEntity);
+                break;
         
             default:
                 throw new UniversalException("Тип перевода: '%s' пока что не поддерживается: ".formatted(request.type()), HttpStatus.BAD_REQUEST);
         }
 
 
-        TransactionEntity transactionEntity = TransactionEntity.builder()
-                                                .amount(request.amount())
-                                                .currency(request.currency())
-                                                .type(request.type())
-                                                .status(TransactionStatus.SUCCESS)
-                                                .description(request.description())
-                                                .createdAt(created_at)
-                                                .fromAccount(fromAccountEntity)
-                                                .toAccount(toAccountEntity)
-                                                .build();
-        
-        TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
-
-        return new TransactionResponseDto(
-            savedTransaction.getAmount(),
-            savedTransaction.getCurrency(),
-            savedTransaction.getType(),
-            savedTransaction.getStatus(),
-            savedTransaction.getDescription(),
-            savedTransaction.getCreatedAt(),
-            Optional.ofNullable(savedTransaction.getFromAccount())
-                .map(AccountEntity::getId)
-                .orElse(null),
-            Optional.ofNullable(savedTransaction.getToAccount())
-                .map(AccountEntity::getId)
-                .orElse(null)
+        return saveTransaction(
+            request.amount(), 
+            request.currency(), 
+            request.type(), 
+            request.description(), 
+            fromAccountEntity, 
+            toAccountEntity
         );
     }
 
@@ -205,7 +201,14 @@ public class BankService {
         return digits.replaceAll("(.{4})", "$1 ").trim();
     }
 
-    private void transferMoney(BigDecimal amount, AccountEntity fromAccountEntity, AccountEntity toAccountEntity) {
+
+
+
+    private void transferMoney(
+        BigDecimal amount, 
+        AccountEntity fromAccountEntity, 
+        AccountEntity toAccountEntity
+    ) {
         if (toAccountEntity != null) {
             if (fromAccountEntity.equals(toAccountEntity)) {
                 throw new UniversalException("Вы не можете перевести деньги самому себе", HttpStatus.BAD_REQUEST);
@@ -222,5 +225,56 @@ public class BankService {
             accountRepository.save(toAccountEntity);
         }
     }
+
+    private void transferDeposit(
+        BigDecimal amount,
+        AccountEntity accountEntity
+    ) {
+        if (accountEntity == null) {
+            throw new UniversalException("Ошибка на сервере: 'transferDeposit'", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        accountEntity.setBalance(accountEntity.getBalance().add(amount));
+        accountRepository.save(accountEntity);
+    }
+
+    private TransactionResponseDto saveTransaction(
+        BigDecimal amount,
+        CurrencyStatus currency,
+        TransactionType type,
+        String description,
+        AccountEntity fromAccountEntity,
+        AccountEntity toAccountEntity
+    ) {
+        LocalDateTime created_at = LocalDateTime.now();
+        TransactionEntity transactionEntity = TransactionEntity.builder()
+                                                .amount(amount)
+                                                .currency(currency)
+                                                .type(type)
+                                                .status(TransactionStatus.SUCCESS)
+                                                .description(description)
+                                                .createdAt(created_at)
+                                                .fromAccount(fromAccountEntity)
+                                                .toAccount(toAccountEntity)
+                                                .build();
+        
+        TransactionEntity savedTransaction = transactionRepository.save(transactionEntity);
+
+        return new TransactionResponseDto(
+            savedTransaction.getAmount(),
+            savedTransaction.getCurrency(),
+            savedTransaction.getType(),
+            savedTransaction.getStatus(),
+            savedTransaction.getDescription(),
+            savedTransaction.getCreatedAt(),
+            Optional.ofNullable(savedTransaction.getFromAccount())
+                .map(AccountEntity::getId)
+                .orElse(null),
+            Optional.ofNullable(savedTransaction.getToAccount())
+                .map(AccountEntity::getId)
+                .orElse(null)
+        );
+    }
+
 
 }

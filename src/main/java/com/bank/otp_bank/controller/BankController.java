@@ -63,9 +63,23 @@ public class BankController {
         @RequestBody 
         TransactionRequestDto request
     ) {
-        TransactionResponseDto response = bankService.make_transaction(authentication.getName(), request);
+        TransactionResponseDto response = bankService.makeTransaction(authentication.getName(), request);
 
         return response;
     }
+
+    //! ONLY FOR DEMO
+    @PostMapping("/make_deposit")
+    public TransactionResponseDto makeDeposit(
+        Authentication authentication,
+        @Valid
+        @RequestBody 
+        TransactionRequestDto request
+    ) {
+        TransactionResponseDto response = bankService.makeTransaction(authentication.getName(), request);
+
+        return response;
+    }
+    
     
 }
