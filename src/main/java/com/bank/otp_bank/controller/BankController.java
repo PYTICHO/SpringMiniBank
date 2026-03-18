@@ -1,5 +1,7 @@
 package com.bank.otp_bank.controller;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,8 +34,16 @@ public class BankController {
     
     // проверка авторизован ли я
     @GetMapping("/checkAuth")
-    public String checkAuth() {
-        return "You authenticated!";
+    public ResponseEntity<?> checkAuth(
+        Authentication authentication
+    ) {
+        if (authentication != null 
+            && authentication.isAuthenticated() 
+            && !(authentication instanceof AnonymousAuthenticationToken)) {
+            
+            return ResponseEntity.ok("You authenticated!: " + authentication.getName());
+        }
+        return ResponseEntity.status(401).body("You not authenticated!");
     }
 
     @PostMapping("/create_card")

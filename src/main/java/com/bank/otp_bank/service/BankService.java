@@ -1,5 +1,6 @@
 package com.bank.otp_bank.service;
 
+import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
 
@@ -104,24 +105,20 @@ public class BankService {
 
                 toAccountEntity = toCardEntity.getAccount();
 
-                if (toAccountEntity != null) {
-                    if (fromAccountEntity.equals(toAccountEntity)) {
-                        throw new UniversalException("Вы не можете перевести деньги самому себе", HttpStatus.BAD_REQUEST);
-                    }
-                    // Если не хватает денег для перевода у отправителя
-                    if (fromAccountEntity.getBalance().compareTo(request.amount()) < 0) {
-                        throw new UnderFundedException("Недостаточно средств на счету отправителя!");
-                    }
-
-                    // Делаем сам перевод и сохраняем в БД
-                    fromAccountEntity.setBalance(fromAccountEntity.getBalance().subtract(request.amount()));
-                    toAccountEntity.setBalance(toAccountEntity.getBalance().add(request.amount()));
-                    accountRepository.save(fromAccountEntity);
-                    accountRepository.save(toAccountEntity);
-                }
+                // Переводим
+                transferMoney(request.amount(), fromAccountEntity, toAccountEntity);
                 break;
 
             case PHONE_TRANSFER:
+                // Проверяем формат номера телефона
+                String normalizedPhoneNumber = GlobalFunctions.normalizePhone(request.to());
+
+                toAccountEntity = userRepository.findByPhone(normalizedPhoneNumber).orElseThrow(
+                    () -> new UniversalException("Номер телефона не привязан ни к какому аккаунту!", HttpStatus.BAD_REQUEST)
+                ).getAccount();
+
+                // Переводим
+                transferMoney(request.amount(), fromAccountEntity, toAccountEntity);
                 break;
         
             default:
@@ -196,7 +193,7 @@ public class BankService {
         return fullName;
     }
 
-    public String formatCardNumber(String input) {
+    private String formatCardNumber(String input) {
         // Убираем всё кроме цифр
         String digits = input.replaceAll("\\D", "");
     
@@ -206,6 +203,24 @@ public class BankService {
     
         // Разбиваем на группы по 4
         return digits.replaceAll("(.{4})", "$1 ").trim();
+    }
+
+    private void transferMoney(BigDecimal amount, AccountEntity fromAccountEntity, AccountEntity toAccountEntity) {
+        if (toAccountEntity != null) {
+            if (fromAccountEntity.equals(toAccountEntity)) {
+                throw new UniversalException("Вы не можете перевести деньги самому себе", HttpStatus.BAD_REQUEST);
+            }
+            // Если не хватает денег для перевода у отправителя
+            if (fromAccountEntity.getBalance().compareTo(amount) < 0) {
+                throw new UnderFundedException("Недостаточно средств на счету отправителя!");
+            }
+
+            // Делаем сам перевод и сохраняем в БД
+            fromAccountEntity.setBalance(fromAccountEntity.getBalance().subtract(amount));
+            toAccountEntity.setBalance(toAccountEntity.getBalance().add(amount));
+            accountRepository.save(fromAccountEntity);
+            accountRepository.save(toAccountEntity);
+        }
     }
 
 }

@@ -93,6 +93,29 @@ Backend реализован на **Spring Boot**.
 
 ---
 
+# 🚀 Запуск Frontend
+
+Frontend находится в папке `frontend/`.
+
+Первый запуск:
+
+1. `cd frontend`
+2. `npm install`
+3. Настроить `frontend/src/config/env.ts` под свой backend
+4. `npm run start`
+
+Сетевые адреса для API:
+
+* Android emulator: `http://10.0.2.2:8080`
+* iOS Simulator: `http://localhost:8080`
+* Реальный iPhone в той же Wi-Fi сети: `http://<IP_твоего_Mac>:8080`
+
+Пример для реального iPhone:
+
+* `http://172.20.10.2:8080`
+
+---
+
 # 🔐 Авторизация
 
 Система авторизации реализована через **JWT + Refresh Token**.

@@ -4,16 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import com.bank.otp_bank.db.dto.AuthResponseDto;
-import com.bank.otp_bank.db.dto.CreateUserRequestDto;
-import com.bank.otp_bank.db.dto.LoginRequestDto;
-import com.bank.otp_bank.db.dto.RefreshTokenRequestDto;
-import com.bank.otp_bank.db.entity.AccountEntity;
-import com.bank.otp_bank.db.entity.RefreshTokenEntity;
-import com.bank.otp_bank.db.entity.UserEntity;
-import com.bank.otp_bank.db.repository.AccountRepository;
-import com.bank.otp_bank.db.repository.RefreshTokenRepository;
-import com.bank.otp_bank.db.repository.UserRepository;
+import com.bank.otp_bank.db.dto.*;
+import com.bank.otp_bank.db.entity.*;
+import com.bank.otp_bank.db.repository.*;
 import com.bank.otp_bank.db.status.CurrencyStatus;
 import com.bank.otp_bank.exception.InvalidCredentialsException;
 import com.bank.otp_bank.exception.InvalidRefreshTokenException;
@@ -39,18 +32,20 @@ public class UserService {
 
     @Transactional
     public AuthResponseDto register(CreateUserRequestDto requestDto) {
+        String normalizedPhoneNumber = GlobalFunctions.normalizePhone(requestDto.phone());
+
         if (userRepository.existsUserByEmail(requestDto.email())) {
             throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
         }
 
-        if (userRepository.existsUserByPhone(requestDto.phone())) {
+        if (userRepository.existsUserByPhone(normalizedPhoneNumber)) {
             throw new UserAlreadyExistsException("Пользователь с таким телефоном уже существует");
         }
 
         UserEntity newUser = UserEntity.builder()
                                 .firstName(requestDto.firstName())
                                 .lastName(requestDto.lastName())
-                                .phone(requestDto.phone())
+                                .phone(normalizedPhoneNumber)
                                 .email(requestDto.email())
                                 .passwordHash(passwordEncoder.encode(requestDto.password()))
                                 .createdAt(LocalDateTime.now())
@@ -114,7 +109,7 @@ public class UserService {
 
 
     
-
+    // Functions
     private String generateAccountNumber() {
         Random random = new Random();
         StringBuilder accountNumber;
@@ -132,7 +127,6 @@ public class UserService {
         
         throw new RuntimeException("Не удалось сгенерировать уникальный номер счёта");
     }
-
 
     private AuthResponseDto buildAuthResponse(UserEntity user, RefreshTokenEntity refreshToken) {
         return new AuthResponseDto(
