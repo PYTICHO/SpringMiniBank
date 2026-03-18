@@ -4,6 +4,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.bank.otp_bank.db.dto.AuthResponseDto;
 import com.bank.otp_bank.db.dto.CreateUserRequestDto;
 import com.bank.otp_bank.db.dto.LoginRequestDto;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Slf4j
+@Tag(name = "Authentication", description = "Операции аутентификации")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -28,26 +31,32 @@ public class AuthController {
     public AuthResponseDto register(
         @Valid 
         @RequestBody 
-        CreateUserRequestDto requestDto
+        CreateUserRequestDto request
     ) {
-        return userService.register(requestDto);
+        AuthResponseDto newUser = userService.register(request);
+        log.info("Создан новый пользователь c id: {}", newUser.userId());
+        return newUser;
     }
 
     @PostMapping("/login")
     public AuthResponseDto login(
         @Valid 
         @RequestBody 
-        LoginRequestDto requestDto
+        LoginRequestDto request
     ) {
-        return userService.login(requestDto);
+        AuthResponseDto user = userService.login(request);
+        log.info("Авторизация пользователя с id: {}", user.userId());
+        return user;
     }
 
     @PostMapping("/refresh")
     public AuthResponseDto refresh(
         @Valid 
         @RequestBody 
-        RefreshTokenRequestDto requestDto
+        RefreshTokenRequestDto request
     ) {
-        return userService.refresh(requestDto);
+        AuthResponseDto user = userService.refresh(request);
+        log.info("Обновил refresh_token и access_token для пользователя с id: {}", user.userId());
+        return user;
     }
 }

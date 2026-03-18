@@ -40,6 +40,42 @@ public class TokenService {
         this.refreshTokenTtlDays = refreshTokenTtlDays;
     }
 
+    
+
+    public boolean isAccessTokenValid(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+
+    public String extractSubject(String token) {
+        try {
+            return parseClaims(token).getSubject();
+        } catch (JwtException | IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+
+    public RefreshTokenEntity buildRefreshToken(UserEntity user) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusDays(refreshTokenTtlDays);
+        String generatedToken = UUID.randomUUID().toString();           // Генерируем рандомный токен
+
+        return RefreshTokenEntity.builder()
+            .token(generatedToken)
+            .expiresAt(expiresAt)
+            .revoked(false)
+            .createdAt(now)
+            .user(user)
+            .build();
+    }
+
+
     public String generateAccessToken(UserEntity user) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiresAt = now.plusMinutes(accessTokenTtlMinutes);
@@ -56,35 +92,7 @@ public class TokenService {
             .compact();
     }
 
-    public boolean isAccessTokenValid(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException ex) {
-            return false;
-        }
-    }
-
-    public String extractSubject(String token) {
-        try {
-            return parseClaims(token).getSubject();
-        } catch (JwtException | IllegalArgumentException ex) {
-            return null;
-        }
-    }
-
-    public RefreshTokenEntity buildRefreshToken(UserEntity user) {
-        LocalDateTime now = LocalDateTime.now();
-
-        return RefreshTokenEntity.builder()
-            .token(UUID.randomUUID().toString())
-            .expiresAt(now.plusDays(refreshTokenTtlDays))
-            .revoked(false)
-            .createdAt(now)
-            .user(user)
-            .build();
-    }
-
+    
     private Date toDate(LocalDateTime dateTime) {
         return Date.from(dateTime.toInstant(ZoneOffset.UTC));
     }

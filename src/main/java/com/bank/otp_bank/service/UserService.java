@@ -82,7 +82,8 @@ public class UserService {
             throw new InvalidCredentialsException("Неверный email или пароль");
         }
 
-        RefreshTokenEntity savedRefreshToken = refreshTokenRepository.save(tokenService.buildRefreshToken(user));
+        RefreshTokenEntity newRefreshToken = tokenService.buildRefreshToken(user);
+        RefreshTokenEntity savedRefreshToken = refreshTokenRepository.save(newRefreshToken);
 
         return buildAuthResponse(user, savedRefreshToken);
     }

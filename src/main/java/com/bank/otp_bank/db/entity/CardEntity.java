@@ -24,9 +24,6 @@ public class CardEntity {
     @Column(name = "card_number", nullable = false, unique = true, length = 19)
     private String cardNumber;
 
-    @Column(name = "masked_number", nullable = false)
-    private String maskedNumber;
-
     @Column(name = "holder_name", nullable = false)
     private String holderName;
 
