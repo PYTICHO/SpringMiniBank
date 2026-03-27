@@ -37,8 +37,5 @@ build/
 
 
 ### Frontend ###
-frontend/node_modules
-frontend/.expo
-frontend/dist
-frontend/web-build
-env.ts
+node_modules
+dist

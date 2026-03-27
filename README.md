@@ -1,140 +1,127 @@
-# 🏦 Mobile Bank Demo
+# Kasay Bank
 
-Демонстрационное банковское приложение, имитирующее базовую функциональность мобильного банка.
-Проект состоит из **backend-сервиса на Spring Boot** и **кроссплатформенного мобильного приложения на React Native**.
+Демонстрационный банковский проект с backend на Spring Boot и веб-клиентом `Kasay Bank` на `React + Vite`.
 
-Цель проекта — показать архитектуру и базовую бизнес-логику банковской системы: пользователи, счета, виртуальные карты, переводы и QR-оплата.
+Проект реализует базовый сценарий интернет-банка:
+- регистрация и вход
+- JWT авторизация
+- refresh token сессии
+- выпуск виртуальных карт
+- пополнение счета
+- перевод по номеру карты
+- перевод по номеру телефона
 
----
+## Архитектура
 
-# 📱 Возможности
-
-### 👤 Авторизация
-
-* Регистрация пользователя
-* Вход по номеру телефона и паролю
-* JWT авторизация
-* Сессии через refresh token
-* Безопасный logout
-
-### 💳 Банковские функции
-
-* Выпуск виртуальной карты
-* Просмотр баланса счёта
-* Просмотр карт пользователя
-* История транзакций
-
-### 💸 Переводы
-
-* Перевод по номеру карты
-* Перевод по номеру телефона (имитация СБП)
-* Внутренние переводы между счетами
-
-### 📷 QR-платежи
-
-* Сканирование QR-кода
-* Подтверждение платежа
-* Имитация оплаты мерчанту
-
----
-
-# 🏗 Архитектура
-
-Проект построен по **клиент-серверной архитектуре**.
-
-```
-Mobile App (React Native)
-        │
-        │ REST API
-        ▼
+```text
+Kasay Bank Web
+      |
+      | REST API
+      v
 Spring Boot Backend
-        │
-        ▼
-PostgreSQL Database
+      |
+      v
+PostgreSQL
 ```
 
----
+## Backend
 
-# ⚙ Backend
+Backend реализован на:
+- Spring Boot
+- Spring Web
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- JWT access token
+- Refresh token
 
-Backend реализован на **Spring Boot**.
+Основные сущности:
+- `User`
+- `Account`
+- `Card`
+- `Transaction`
+- `RefreshToken`
 
-Основные технологии:
+## Frontend
 
-* Spring Boot
-* Spring Web
-* Spring Security
-* Spring Data JPA
-* PostgreSQL
-* JWT (access token)
-* Refresh Token
+Frontend находится в [frontend/](/Users/davvk/Code/Java/SpringBoot/otp-bank/frontend) и представляет собой лаконичный веб-кабинет в стиле интернет-банка.
 
-### Основные сущности
+Что есть в интерфейсе:
+- отдельный вход и регистрация
+- сохранение сессии в браузере
+- защищённый кабинет после авторизации
+- раздел карт
+- раздел переводов
+- список получателей с их картами при переводе по номеру карты
+- зелёное подтверждение после успешного перевода
 
-* `User` — пользователь системы
-* `Account` — банковский счёт
-* `Card` — банковская карта
-* `Transaction` — банковская операция
-* `RefreshToken` — токен обновления сессии
+## Запуск
 
----
+### 1. База данных
 
-# 📱 Mobile приложение
+```bash
+docker compose up -d
+```
 
-Мобильное приложение разрабатывается на **React Native**.
+### 2. Backend
 
-Используемые технологии:
+```bash
+./mvnw spring-boot:run
+```
 
-* React Native
-* TypeScript
-* React Navigation
-* Secure Storage для токенов
-* REST API
+### 3. Frontend
 
----
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-# 🚀 Запуск Frontend
+Откройте:
 
-Frontend находится в папке `frontend/`.
+```text
+http://localhost:5173
+```
 
-Первый запуск:
+По умолчанию frontend проксирует `/api/*` на:
 
-1. `cd frontend`
-2. `npm install`
-3. Настроить `frontend/src/config/env.ts` под свой backend
-4. `npm run start`
+```text
+http://localhost:8080
+```
 
-Сетевые адреса для API:
+Если backend работает на другом адресе, создайте файл `frontend/.env`:
 
-* Android emulator: `http://10.0.2.2:8080`
-* iOS Simulator: `http://localhost:8080`
-* Реальный iPhone в той же Wi-Fi сети: `http://<IP_твоего_Mac>:8080`
+```bash
+VITE_API_BASE_URL=http://localhost:8080
+```
 
-Пример для реального iPhone:
+## Авторизация
 
-* `http://170.12.3.2:8080`
+Сценарий работы:
 
----
+1. Пользователь регистрируется или входит.
+2. Сервер возвращает `accessToken` и `refreshToken`.
+3. Frontend сохраняет сессию в браузере.
+4. Защищённые запросы идут с `Bearer` токеном.
+5. При необходимости используется обновление через `refreshToken`.
 
-# 🔐 Авторизация
+## Реализованные endpoint-ы, которые использует frontend
 
-Система авторизации реализована через **JWT + Refresh Token**.
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `GET /api/banking/checkAuth`
+- `GET /api/banking/my_cards`
+- `GET /api/banking/recipients`
+- `POST /api/banking/create_card`
+- `POST /api/banking/make_deposit`
+- `POST /api/banking/make_transaction`
 
-1. Пользователь выполняет вход.
-2. Сервер возвращает:
-
-   * `accessToken`
-   * `refreshToken`
-3. `accessToken` используется для запросов к API.
-4. При истечении срока действия `accessToken` используется `refreshToken`.
-
----
-
-# 🗄 Структура базы данных
+## Структура базы данных
 
 Основные таблицы:
 
-```
+```text
 users
 accounts
 cards
@@ -144,20 +131,9 @@ refresh_tokens
 
 Связи:
 
+```text
+User 1 -- 1 Account
+Account 1 -- N Cards
+Account 1 -- N Transactions
+User 1 -- N RefreshTokens
 ```
-User 1 ── 1 Account
-Account 1 ── N Cards
-Account 1 ── N Transactions
-User 1 ── N RefreshTokens
-```
-
----
-
-# 📌 Цель проекта
-
-Проект разработан как **демонстрационная банковская система**, предназначенная для:
-
-* обучения архитектуре банковских приложений
-* демонстрации работы backend + mobile
-* участия в хакатонах и учебных проектах
-* изучения Spring Boot и React Native

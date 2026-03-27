@@ -151,6 +151,59 @@ public class BankService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<RecipientSuggestionDto> getRecipients(String email) {
+        return userRepository.findAll().stream()
+            .filter(user -> !user.getEmail().equals(email))
+            .map(user -> new RecipientSuggestionDto(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getPhone(),
+                user.getEmail(),
+                Optional.ofNullable(user.getAccount())
+                    .map(AccountEntity::getCards)
+                    .orElse(List.of())
+                    .stream()
+                    .map(card -> new RecipientCardDto(
+                        card.getCardNumber(),
+                        card.getHolderName(),
+                        card.getType(),
+                        card.getStatus()
+                    ))
+                    .toList()
+            ))
+            .filter(recipient -> !recipient.cards().isEmpty())
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public MyCardsResponseDto getMyCards(String email) {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+            () -> new NotFoundAccountException("User с email: '%s' не существует!".formatted(email))
+        );
+
+        AccountEntity account = accountRepository.findByUserId(user.getId()).orElseThrow(
+            () -> new NotFoundAccountException("Счет у юзера с email: '%s' не существует!".formatted(email))
+        );
+
+        List<CreateCardResponseDto> cards = Optional.ofNullable(account.getCards())
+            .orElse(List.of())
+            .stream()
+            .map(card -> new CreateCardResponseDto(
+                card.getCardNumber(),
+                card.getHolderName(),
+                card.getExpireDate(),
+                card.getType(),
+                card.getStatus(),
+                card.getCreatedAt(),
+                account.getId()
+            ))
+            .toList();
+
+        return new MyCardsResponseDto(account.getId(), cards);
+    }
+
 
 
 
