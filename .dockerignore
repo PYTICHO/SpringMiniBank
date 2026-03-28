@@ -1,0 +1,7 @@
+.git
+.gitignore
+.mvn/wrapper/maven-wrapper.jar
+target
+logs
+frontend/node_modules
+frontend/dist

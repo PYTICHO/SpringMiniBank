@@ -124,6 +124,7 @@ export function createApi(getSession, setSession, onUnauthorized) {
       }),
     refresh: (refreshToken) => refreshSession(refreshToken),
     checkAuth: () => request('/api/banking/checkAuth'),
+    getAccountSummary: () => request('/api/banking/account_summary'),
     getRecipients: () => request('/api/banking/recipients'),
     getMyCards: () => request('/api/banking/my_cards'),
     createCard: () =>

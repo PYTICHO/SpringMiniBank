@@ -35,6 +35,13 @@ build/
 ### VS Code ###
 .vscode/
 
+### Local env ###
+.env
+.env.*
+!.env.prod.example
+
+### OS ###
+.DS_Store
 
 ### Frontend ###
 node_modules

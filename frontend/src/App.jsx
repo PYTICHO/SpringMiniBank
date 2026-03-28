@@ -58,6 +58,7 @@ function App() {
   const [loadingKey, setLoadingKey] = useState('');
   const [authCheck, setAuthCheck] = useState('');
   const [cards, setCards] = useState([]);
+  const [accountSummary, setAccountSummary] = useState(null);
   const [activity, setActivity] = useState([]);
   const [recipients, setRecipients] = useState([]);
   const [recipientsError, setRecipientsError] = useState('');
@@ -147,8 +148,35 @@ function App() {
     };
   }
 
+  async function refreshAccountData() {
+    const [summaryPayload, recipientsPayload, myCardsPayload] = await Promise.all([
+      api.getAccountSummary(),
+      api.getRecipients(),
+      api.getMyCards()
+    ]);
+
+    setAccountSummary(summaryPayload);
+    setRecipients(recipientsPayload);
+    setRecipientsError('');
+    setCards(myCardsPayload.cards || []);
+    setCardsError('');
+  }
+
+  function formatMoney(value, currency = 'RUB') {
+    if (value === null || value === undefined) {
+      return '0';
+    }
+
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2
+    }).format(Number(value));
+  }
+
   useEffect(() => {
     if (!session?.accessToken) {
+      setAccountSummary(null);
       setRecipients([]);
       setRecipientsError('');
       setCards([]);
@@ -160,12 +188,14 @@ function App() {
 
     async function loadProtectedData() {
       try {
-        const [recipientsPayload, myCardsPayload] = await Promise.all([
+        const [summaryPayload, recipientsPayload, myCardsPayload] = await Promise.all([
+          api.getAccountSummary(),
           api.getRecipients(),
           api.getMyCards()
         ]);
 
         if (!ignore) {
+          setAccountSummary(summaryPayload);
           setRecipients(recipientsPayload);
           setRecipientsError('');
           setCards(myCardsPayload.cards || []);
@@ -242,8 +272,7 @@ function App() {
       setStatus('Новая виртуальная карта выпущена.');
       rememberActivity('Выпуск карты', payload);
       setActiveSection('cards');
-      const nextRecipients = await api.getRecipients();
-      setRecipients(nextRecipients);
+      await refreshAccountData();
     });
   }
 
@@ -253,6 +282,7 @@ function App() {
       const payload = await api.makeDeposit(buildMoneyPayload(depositForm, 'DEPOSIT'));
       setStatus('Пополнение счета прошло успешно.');
       rememberActivity('Пополнение счета', payload);
+      await refreshAccountData();
     });
   }
 
@@ -265,6 +295,7 @@ function App() {
       setStatus('Перевод по номеру карты выполнен.');
       setSuccessMessage('Перевод выполнен!');
       rememberActivity('Перевод по карте', payload);
+      await refreshAccountData();
     });
   }
 
@@ -277,6 +308,7 @@ function App() {
       setStatus('Перевод по номеру телефона выполнен.');
       setSuccessMessage('Перевод выполнен!');
       rememberActivity('Перевод по телефону', payload);
+      await refreshAccountData();
     });
   }
 
@@ -284,6 +316,7 @@ function App() {
     clearSession();
     setSession(null);
     setAuthCheck('');
+    setAccountSummary(null);
     setCards([]);
     setActivity([]);
     setRecipients([]);
@@ -435,6 +468,11 @@ function App() {
             <strong>{session.firstName}</strong>
             <strong>{session.lastName}</strong>
             <span>{session.email}</span>
+            <span className="profile-balance">
+              {accountSummary
+                ? formatMoney(accountSummary.balance, accountSummary.currency)
+                : 'Баланс загружается'}
+            </span>
           </div>
         </div>
 
@@ -474,10 +512,35 @@ function App() {
             <article className="hero-card wide-card">
               <div className="hero-card-top">
                 <div>
-                  <h2>Добро пожаловать</h2>
+                  <span className="hero-kicker">Kasay Bank</span>
+                  <h2>
+                    Здравствуйте, {session.firstName}
+                  </h2>
+                  <p className="headline-copy">
+                    Управляйте картами, переводами и безопасностью аккаунта в одном месте.
+                  </p>
+                </div>
+                <div className="hero-summary">
+                  <div className="hero-summary-item">
+                    <span className="muted-label">Пользователь</span>
+                    <strong>
+                      {session.firstName} {session.lastName}
+                    </strong>
+                  </div>
+                  <div className="hero-summary-item">
+                    <span className="muted-label">Баланс</span>
+                    <strong>
+                      {accountSummary
+                        ? formatMoney(accountSummary.balance, accountSummary.currency)
+                        : 'Загрузка...'}
+                    </strong>
+                  </div>
+                  <div className="hero-summary-item">
+                    <span className="muted-label">Карт</span>
+                    <strong>{accountSummary?.cardsCount ?? cards.length}</strong>
+                  </div>
                 </div>
               </div>
-              <p className="headline-copy">Все основные операции доступны в меню слева.</p>
 
               <div className="quick-actions">
                 <button className="action-chip" onClick={handleCreateCard} type="button">
@@ -509,7 +572,7 @@ function App() {
                 {session.firstName} {session.lastName}
               </h3>
               <span>{session.phone}</span>
-              <span>{session.email}</span>
+              <span> {session.email}</span>
             </article>
 
             <article className="panel-card">

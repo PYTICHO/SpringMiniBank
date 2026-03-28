@@ -204,6 +204,29 @@ public class BankService {
         return new MyCardsResponseDto(account.getId(), cards);
     }
 
+    @Transactional(readOnly = true)
+    public AccountSummaryDto getAccountSummary(String email) {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+            () -> new NotFoundAccountException("User с email: '%s' не существует!".formatted(email))
+        );
+
+        AccountEntity account = accountRepository.findByUserId(user.getId()).orElseThrow(
+            () -> new NotFoundAccountException("Счет у юзера с email: '%s' не существует!".formatted(email))
+        );
+
+        int cardsCount = Optional.ofNullable(account.getCards())
+            .map(List::size)
+            .orElse(0);
+
+        return new AccountSummaryDto(
+            account.getId(),
+            account.getAccountNumber(),
+            account.getBalance(),
+            account.getCurrency(),
+            cardsCount
+        );
+    }
+
 
 
 

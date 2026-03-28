@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.bank.otp_bank.db.dto.CreateCardResponseDto;
+import com.bank.otp_bank.db.dto.AccountSummaryDto;
 import com.bank.otp_bank.db.dto.MyCardsResponseDto;
 import com.bank.otp_bank.db.dto.RecipientSuggestionDto;
 import com.bank.otp_bank.db.dto.TransactionRequestDto;
@@ -62,6 +63,13 @@ public class BankController {
         Authentication authentication
     ) {
         return bankService.getMyCards(authentication.getName());
+    }
+
+    @GetMapping("/account_summary")
+    public AccountSummaryDto getAccountSummary(
+        Authentication authentication
+    ) {
+        return bankService.getAccountSummary(authentication.getName());
     }
 
     @PostMapping("/create_card")

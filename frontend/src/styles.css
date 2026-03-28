@@ -277,6 +277,13 @@ small,
   display: block;
 }
 
+.profile-balance {
+  margin-top: 10px;
+  color: var(--white);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
 .avatar-circle,
 .nav-icon {
   display: grid;
@@ -363,7 +370,8 @@ small,
 
 .hero-card {
   background:
-    linear-gradient(180deg, #090b58 0%, #101347 44%, #1b1d23 44%, #1b1d23 100%);
+    radial-gradient(circle at top right, rgba(80, 115, 255, 0.28), transparent 24%),
+    linear-gradient(135deg, #101a56 0%, #0f1240 46%, #1b1d23 100%);
 }
 
 .hero-card-top,
@@ -375,10 +383,37 @@ small,
   align-items: flex-start;
 }
 
+.hero-kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.hero-summary {
+  min-width: 280px;
+  padding: 18px;
+  border-radius: 24px;
+  background: rgba(12, 16, 30, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 14px;
+}
+
+.hero-summary-item strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.08rem;
+}
+
 .headline-copy {
   max-width: 620px;
   font-size: 1.15rem;
-  margin: 18px 0 0;
+  margin: 12px 0 0;
 }
 
 .quick-actions {
@@ -629,6 +664,15 @@ small,
   .bank-form-grid,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .hero-card-top {
+    flex-direction: column;
+  }
+
+  .hero-summary {
+    width: 100%;
+    min-width: 0;
   }
 }
 

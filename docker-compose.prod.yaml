@@ -2,14 +2,12 @@ services:
   postgres:
     image: postgres:16
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: bank
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
       test: pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB
       interval: 10s
@@ -26,14 +24,12 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
-      APP_SECURITY_JWT_SECRET: dev-secret-key-for-otp-bank-jwt-signing-1234567890
-      APP_SECURITY_JWT_ACCESS_TOKEN_TTL_MINUTES: 15
-      APP_SECURITY_JWT_REFRESH_TOKEN_TTL_DAYS: 365
-    ports:
-      - "8080:8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_SECURITY_JWT_SECRET: ${APP_SECURITY_JWT_SECRET}
+      APP_SECURITY_JWT_ACCESS_TOKEN_TTL_MINUTES: ${APP_SECURITY_JWT_ACCESS_TOKEN_TTL_MINUTES:-15}
+      APP_SECURITY_JWT_REFRESH_TOKEN_TTL_DAYS: ${APP_SECURITY_JWT_REFRESH_TOKEN_TTL_DAYS:-365}
 
   frontend:
     build:
@@ -43,7 +39,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "5173:80"
+      - "${FRONTEND_PORT:-80}:80"
 
 volumes:
   postgres_data:

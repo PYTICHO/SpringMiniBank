@@ -1,6 +1,64 @@
 # Kasay Bank
-
 Демонстрационный банковский проект с backend на Spring Boot и веб-клиентом `Kasay Bank` на `React + Vite`.
+
+
+### Быстрый запуск через Docker
+
+первый запуск:
+```bash
+docker compose up --build -d
+```
+
+остальные запуски:
+```bash
+docker compose up -d
+```
+
+отключить:
+```bash
+docker compose down
+```
+
+отключить с удалением БД:
+```bash
+docker compose down -v
+```
+
+После запуска:
+
+```text
+Frontend: http://localhost:5173
+Backend API: http://localhost:8080
+Swagger UI: http://localhost:8080/swagger-ui/index.html
+PostgreSQL: localhost:5432
+```
+
+### Продакшен-вариант для сервера
+
+1. Скопируйте пример env:
+```bash
+cp .env.prod.example .env
+```
+
+2. Заполните `.env` своими значениями:
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `APP_SECURITY_JWT_SECRET`
+
+3. Поднимите production-compose:
+```bash
+docker compose -f docker-compose.prod.yaml up --build -d
+```
+
+В production-конфиге:
+- наружу открыт только frontend
+- backend не публикуется наружу
+- postgres не публикуется наружу
+- backend и база доступны только внутри docker-сети
+
+Если нужен свой порт для сайта, измените `FRONTEND_PORT` в `.env`.
+
 
 Проект реализует базовый сценарий интернет-банка:
 - регистрация и вход
@@ -55,21 +113,16 @@ Frontend находится в [frontend/](/Users/davvk/Code/Java/SpringBoot/otp
 - список получателей с их картами при переводе по номеру карты
 - зелёное подтверждение после успешного перевода
 
-## Запуск
 
-### 1. База данных
+### ЕСЛИ ЗАПУСКАТЬ ПО ОТДЕЛЬНОСТИ КАЖДЫЙ СЕРВИС:
 
-```bash
-docker compose up -d
-```
-
-### 2. Backend
+### 1. Backend
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### 3. Frontend
+### 2. Frontend
 
 ```bash
 cd frontend
@@ -121,7 +174,7 @@ VITE_API_BASE_URL=http://localhost:8080
 
 Основные таблицы:
 
-```text
+```
 users
 accounts
 cards
